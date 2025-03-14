@@ -55,10 +55,18 @@
 # 
 # ```{r}
 pockets <- c("00", 0:36)
+pockets
+biased_pockets <- c(2, 4, 21)
+biased_prob <- 0.028
 
-remaining_prob <- 1 - 1/38 - 0.07
-prob_each <- remaining_prob / 37 # evenly distribute the remaining probability over the other pockets
-probs <- c(1/38 + 0.07, rep(prob_each, 37)) # put all those probabilities into the same vector
+#this is to find probability of unbiased pockets after applying the biased ones
+remaining_prob <- 1 - 3/38 - (biased_prob * 3)
+remaining_prob
+prob_each <- remaining_prob / 35 # evenly distribute the remaining probability over the other pockets
+prob_each
+probs <- ifelse(pockets %in% biased_pockets, 1/38 + biased_prob, prob_each)
+#probs <- c(1/38 + 0.028, 1/38 + 0.028, 1/38 + 0.028, rep(prob_each, 35)) # put all those probabilities into the same vector
+probs
 sum(probs) # check that the probabilities still sum to 1
 
 # you'll have to modify this when more than one pocket is biased
@@ -66,11 +74,14 @@ sum(probs) # check that the probabilities still sum to 1
 # 
 # ```{r}
 # sample like in previous homeworks
+num_sims = 5000
+spins <- sample(pockets, size = num_sims, replace = TRUE, prob = probs)
 spins <- factor(spins, levels = c("00", 0:36)) # sorts the plot labels from 00 to 36 
 
 # table gets the frequencies
 # barplot makes the plot
 barplot(table(spins))
+hist(table(spins))
 # ```
 
 # Problem 2
