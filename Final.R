@@ -84,6 +84,11 @@ barplot(table(spins))
 hist(table(spins))
 # ```
 
+
+
+
+
+
 # Problem 2
 # 
 # For each lottery draw, randomly select 5 numbers from the range 1 to 47 and a Mega number from the range 1 to 27.
@@ -91,27 +96,84 @@ hist(table(spins))
 # ```{r}
 # for one day
 set.seed(123)
+# generate winning numbers of a single draw
 winning_5_numbers <- sample(1:47, 5)
 winning_mega_number <- sample(1:27, 1)
 
+# simulate 500,000 lottery draws
 prizes <- character(500000)
 for(i in 1:500000) {
-  first_five_nums <- sample(1:47, 5)
-  mega_number <- sample(1:27, 1)
+  player_5_numbers <- sample(1:47, 5)
+  player_mega_number <- sample(1:27, 1)
   
-  if(winning_mega_number == mega_number & all(first_five_nums %in% winning_5_numbers)) {
-    # it's a first prize
+  # match 5 numbers between win and player lottery
+  matches_5 <- sum(player_5_numbers %in% winning_5_numbers)
+  match_mega <- player_mega_number == winning_mega_number
+  
+  # issue out prizes
+  if(matches_5 == 5 && match_mega) {
     prizes[i] <- "first prize"
-  } else if(TRUE) { # but remove TRUE with the logical condition of getting second prize (you can figure this out) 
+  } else if(matches_5 == 5 && !match_mega) {
     prizes[i] <- "second prize"
-  } else if(TRUE) {# but remove TRUE with the logical condition of getting third prize
+  } else if(matches_5 == 4 && match_mega) {
     prizes[i] <- "third prize"
   } else {
     prizes[i] <- "no prize"
   }
 }
 
-# hint for third prize
-sum(x %in% y) # counts # of matches between x and y.
-# If x and y share 4 numbers in common, then sum(x %in% y) == 4 
-# ```
+# calculate prize occurrence
+prize_counts <- table(prizes)
+print(prize_counts)
+
+# calculate simulated probabilities
+simulated_probabilities <- prize_counts / 500000
+print(simulated_probabilities)
+
+# calculate theoretical/analytic probabilities
+
+# total combos: C(47, 5) * 27 -- essentially the first prize already
+first_prize_theoretical <- 1 / (choose(47, 5) * 27)
+# second prize: C(47,5) ways to choose 5 numbers correctly, 26/27 ways to choose Mega incorrectly
+second_prize_theoretical <- 1 / (choose(47, 5)) * (26 / 27)
+# third prize: ways to match 4 out of 5: C(5,4) * C(42,1) = 5 * 42 = 210
+# Probability = [C(5,4) * C(42,1)] / [C(47,5)] * (1/27)
+third_prize_theoretical <- (choose(5, 4) * choose(42, 1)) / choose(47, 5) * (1 / 27)
+
+# print theoretical probabilities
+cat("Theoretical probabilities:\n")
+cat("First prize:", first_prize_theoretical, "\n")
+cat("Second prize:", second_prize_theoretical, "\n")
+cat("Third prize:", third_prize_theoretical, "\n")
+
+# compare simulated and theoretical probabilities
+comparison <- data.frame(
+  Prize = c("First Prize", "Second Prize", "Third Prize"),
+  Simulated = c(
+    simulated_probabilities["first prize"], 
+    simulated_probabilities["second prize"], 
+    simulated_probabilities["third prize"]
+  ),
+  Theoretical = c(
+    first_prize_theoretical,
+    second_prize_theoretical,
+    third_prize_theoretical
+  )
+)
+
+# column for the ratio of simulated to theoretical
+comparison$Ratio <- comparison$Simulated / comparison$Theoretical
+
+# print comparison
+print(comparison)
+
+# plot the results for visualization
+barplot(
+  rbind(comparison$Simulated, comparison$Theoretical),
+  beside = TRUE,
+  names.arg = comparison$Prize,
+  col = c("blue", "red"),
+  main = "Simulated vs. theoretical lottery probabilities",
+  ylab = "Probability",
+  legend.text = c("Simulated", "Theoretical")
+)
